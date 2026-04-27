@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { PixelText } from './PixelText';
 import { ViewMode, CalendarEvent } from '../types';
 import { 
   format, addMonths, subMonths, addYears, subYears, 
@@ -200,13 +201,13 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
 
   const getHeaderTitle = () => {
     switch (viewMode) {
-      case 'year': return <span>{format(currentDate, 'yyyy')}</span>;
-      case 'month': return <span>{format(currentDate, 'MMMM yyyy')}</span>;
+      case 'year': return <PixelText text={format(currentDate, 'yyyy')} />;
+      case 'month': return <PixelText text={format(currentDate, 'MMM yyyy')} color="black" />;
       case 'week': 
-        return `Week of ${format(startOfWeek(currentDate), 'MMM d')}`;
+        return <PixelText text={`Week of ${format(startOfWeek(currentDate), 'MMM d')}`} color="black" />;
       case 'day': 
         const isToday = isSameDay(currentDate, new Date());
-        return <span className={isToday ? 'is-today' : ''}>{format(currentDate, 'MMM d, yyyy')}</span>;
+        return <PixelText text={format(currentDate, 'MMM d, yyyy')} color={isToday ? '#ff0000' : 'black'} />;
       default: return null;
     }
   };
@@ -223,7 +224,9 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
     return (
       <div className="grid grid-7 month-grid">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-          <div key={i} className="day-header">{d}</div>
+          <div key={i} className="day-header">
+            <PixelText text={d} />
+          </div>
         ))}
         {days.map((day, i) => {
           const isCurrentMonth = isSameMonth(day, monthStart);
@@ -237,10 +240,17 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                 setViewMode('day');
               }}
             >
-              <span className={`day-number ${isSameDay(day, new Date()) ? 'is-today' : ''}`}>{format(day, 'd')}</span>
+              <div className="day-number">
+                <PixelText 
+                  text={format(day, 'd')} 
+                  color={isSameDay(day, new Date()) ? '#ff0000' : (isCurrentMonth ? 'black' : '#888')} 
+                />
+              </div>
               <div className="month-events-list">
                 {dayEvents.slice(0, 4).map(e => (
-                  <div key={e.id} className="month-event-item" style={{ backgroundColor: e.color || 'var(--accent-color)' }}>{e.title}</div>
+                  <div key={e.id} className="month-event-item" style={{ backgroundColor: e.color || 'var(--accent-color)' }}>
+                    <PixelText text={e.title.substring(0, 7)} color="black" />
+                  </div>
                 ))}
               </div>
             </div>
@@ -276,7 +286,9 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                 setViewMode('month');
               }}
             >
-              <div className="month-name">{format(month, 'MMM')}</div>
+              <div className="month-name">
+                <PixelText text={format(month, 'MMM')} />
+              </div>
               <div className="mini-month-grid">
                 {days.map((day, di) => {
                   const isCurrentMonth = isSameMonth(day, monthStart);
@@ -319,7 +331,12 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
           const dayEvents = events.filter(e => isEventOnDay(e, day));
           return (
             <div key={i} className="week-day-col">
-              <div className={`week-day-header ${isSameDay(day, new Date()) ? 'is-today' : ''}`}>{format(day, 'EEE d')}</div>
+              <div className="week-day-header">
+                <PixelText 
+                  text={format(day, 'EEE d')} 
+                  color={isSameDay(day, new Date()) ? '#ff0000' : 'black'} 
+                />
+              </div>
               <div 
                 className="week-day-body"
                 onClick={() => {
@@ -340,7 +357,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                       }}
                       title={`${format(e.date, 'HH:mm')} - ${e.title}`}
                     >
-                      {e.title}
+                      <PixelText text={e.title.substring(0, 6)} color="black" />
                     </div>
                   );
                 })}
@@ -391,13 +408,19 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
               >
                 <div className="timeline-hour">
                   {(!isDayZoomed && (time % 2 === 1) && isBoundary) && (
-                    <div className="hour-label-locked" style={{ transform: `translateY(calc(-50% + ${getLabelOffset(time)}px))` }}>{Math.floor(time)}:00</div>
+                    <div className="hour-label-locked" style={{ transform: `translateY(calc(-50% + ${getLabelOffset(time)}px))` }}>
+                      <PixelText text={`${Math.floor(time)}:00`} color="#555" />
+                    </div>
                   )}
                   {(isDayZoomed && isBoundary) && (
-                    <div className="hour-label-locked" style={{ transform: 'translateY(-50%)' }}>{Math.floor(time)}:00</div>
+                    <div className="hour-label-locked" style={{ transform: 'translateY(-50%)' }}>
+                      <PixelText text={`${Math.floor(time)}:00`} color="#555" />
+                    </div>
                   )}
                   {(isDayZoomed && !isBoundary && zoomHeight > 10) && (
-                    <div className="hour-label-locked" style={{ transform: 'translateY(-50%)' }}>{Math.floor(time)}:30</div>
+                    <div className="hour-label-locked" style={{ transform: 'translateY(-50%)' }}>
+                      <PixelText text={`${Math.floor(time)}:30`} color="#555" />
+                    </div>
                   )}
                 </div>
                 <div className="timeline-events-placeholder" />
@@ -437,8 +460,12 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                     }
                   }}
                 >
-                  <span className="event-time">{format(e.date, 'HH:mm')}</span>
-                  <span className="event-title">{e.title}</span>
+                    <div className="event-time">
+                      <PixelText text={format(e.date, 'HH:mm')} color="#444" />
+                    </div>
+                    <div className="event-title">
+                      <PixelText text={e.title.substring(0, 20)} color="black" />
+                    </div>
                 </div>
               );
             })}
@@ -794,12 +821,12 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                   <div 
                     className="hover-time-label" 
                     style={{ 
-                      transform: `translate(${mousePos.x + 10}px, ${y - 3}px)`,
+                      transform: `translate(${mousePos.x + 4}px, ${y - 3}px)`,
                       top: 0, left: 0, position: 'absolute',
                       pointerEvents: 'none'
                     }}
                   >
-                    {timeStr}
+                    <PixelText text={timeStr} />
                   </div>
                 </>
               );
@@ -841,7 +868,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                       pointerEvents: 'none'
                     }}
                   >
-                    {timeStr}
+                    <PixelText text={timeStr} />
                   </div>
                 </>
               );
@@ -853,19 +880,19 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
       {/* Top Bar */}
       <div className="top-bar">
         <div className="view-controls">
-          <button className={viewMode === 'day' ? 'active' : ''} onClick={() => setViewMode('day')}>D</button>
-          <button className={viewMode === 'week' ? 'active' : ''} onClick={() => setViewMode('week')}>W</button>
-          <button className={viewMode === 'month' ? 'active' : ''} onClick={() => setViewMode('month')}>M</button>
-          <button className={viewMode === 'year' ? 'active' : ''} onClick={() => setViewMode('year')}>Y</button>
+          <button className={viewMode === 'day' ? 'active' : ''} onClick={() => setViewMode('day')}><PixelText text="D" /></button>
+          <button className={viewMode === 'week' ? 'active' : ''} onClick={() => setViewMode('week')}><PixelText text="W" /></button>
+          <button className={viewMode === 'month' ? 'active' : ''} onClick={() => setViewMode('month')}><PixelText text="M" /></button>
+          <button className={viewMode === 'year' ? 'active' : ''} onClick={() => setViewMode('year')}><PixelText text="Y" /></button>
         </div>
         
         <div className="nav-controls">
-          <button onClick={handlePrev}>&lt;</button>
+          <button onClick={handlePrev}><PixelText text="<" /></button>
           <span className="current-date-title">{getHeaderTitle()}</span>
-          <button onClick={handleNext}>&gt;</button>
+          <button onClick={handleNext}><PixelText text=">" /></button>
         </div>
         
-        <button className="add-btn" onClick={() => onAddEventClick(currentDate)}>+</button>
+        <button className="add-btn" onClick={() => onAddEventClick(currentDate)}><PixelText text="+" color="black" /></button>
       </div>
 
       {/* Main Content Area */}

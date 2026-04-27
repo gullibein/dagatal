@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { PixelText } from './components/PixelText';
 import { CalendarView } from './components/CalendarView';
 import { EventModal } from './components/EventModal';
 import { EditEventModal } from './components/EditEventModal';
@@ -183,9 +184,9 @@ function App() {
           width={4} 
           height={5}
           style={{ 
-            transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
-            top: 0,
-            left: 0
+            left: `${mousePos.x}px`,
+            top: `${mousePos.y}px`,
+            position: 'absolute'
           }} 
           ref={canvas => {
             if (canvas) {
@@ -232,7 +233,7 @@ function App() {
                     setContextMenu(null);
                   }}
                 >
-                  Edit
+                  <PixelText text="Edit" />
                 </div>
               )}
               <div 
@@ -241,7 +242,7 @@ function App() {
                   handleAddEventClick(contextMenu.date);
                 }}
               >
-                Add New
+                <PixelText text="Add New" />
               </div>
             </div>
           </div>
@@ -277,9 +278,15 @@ function App() {
           <div className="alarms-overlay">
             {activeAlarms.map(alarm => (
               <div key={alarm.id} className="alarm-box">
-                <div className="alarm-title">🔔 Reminder</div>
-                <div className="alarm-text">{alarm.eventTitle} coming up in {alarm.message}</div>
-                <button className="primary block" onClick={() => dismissAlarm(alarm.id)}>Dismiss</button>
+                <div className="alarm-title">
+                  <PixelText text="Reminder" color="var(--accent-color)" />
+                </div>
+                <div className="alarm-text">
+                  <PixelText text={`${alarm.eventTitle.substring(0, 20)} in ${alarm.message}`} />
+                </div>
+                <button className="primary block" onClick={() => dismissAlarm(alarm.id)}>
+                  <PixelText text="Dismiss" />
+                </button>
               </div>
             ))}
           </div>

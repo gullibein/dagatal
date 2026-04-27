@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PixelText } from './PixelText';
 
 export function RetroSelect({ 
   value, 
@@ -18,8 +19,10 @@ export function RetroSelect({
   return (
     <div className="retro-select-container">
       <div className="retro-select-value" onClick={() => setIsOpen(!isOpen)}>
-        <span>{displayValue}</span>
-        <span className="retro-select-arrow">v</span>
+        <PixelText text={displayValue} />
+        <div className="retro-select-arrow">
+          <PixelText text="v" />
+        </div>
       </div>
       {isOpen && (
         <div className="retro-select-dropdown">
@@ -35,7 +38,7 @@ export function RetroSelect({
                   setIsOpen(false);
                 }}
               >
-                {optLabel}
+                <PixelText text={optLabel} />
               </div>
             );
           })}

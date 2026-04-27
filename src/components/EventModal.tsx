@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-
+import { PixelText } from './PixelText';
+import { PixelInput } from './PixelInput';
 import { RetroSelect } from './RetroSelect';
 interface EventModalProps {
   initialDate: Date;
@@ -38,15 +39,17 @@ export function EventModal({ initialDate, onSave, onClose, onEdit }: EventModalP
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">New Event</div>
+        <div className="modal-header">
+          <PixelText text="New Event" color="var(--bg-color)" />
+        </div>
         
         <div className="modal-body">
-          <input 
-            className="retro-input" 
+          <PixelInput 
             placeholder="Event Title" 
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={setTitle}
             autoFocus
+            block
           />
           
           <div className="time-picker" style={{ justifyContent: 'space-between' }}>
@@ -83,10 +86,18 @@ export function EventModal({ initialDate, onSave, onClose, onEdit }: EventModalP
 
         <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <button onClick={onClose}>Cancel</button>
-            {onEdit && <button onClick={onEdit}>Show More</button>}
+            <button onClick={onClose}>
+              <PixelText text="Cancel" />
+            </button>
+            {onEdit && (
+              <button onClick={onEdit}>
+                <PixelText text="More" />
+              </button>
+            )}
           </div>
-          <button className="primary" onClick={handleSave}>Save</button>
+          <button className="primary" onClick={handleSave}>
+            <PixelText text="Save" />
+          </button>
         </div>
       </div>
     </div>

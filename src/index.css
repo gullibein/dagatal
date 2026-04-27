@@ -1,9 +1,4 @@
-@font-face {
-  font-family: 'zen-3x5';
-  src: url('/zen-3x5.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
+/* Global font family removed. Using PixelText component for all rendering. */
 
 :root {
   --bg-color: #d1d1d1; /* Light grey retro background */
@@ -19,7 +14,7 @@ body, html {
   background-color: #000; /* Black borders outside the container */
   overflow: hidden; /* Prevent scrolling */
   cursor: none; /* Hide default cursor */
-  font-family: 'zen-3x5', sans-serif;
+  /* font-family removed */
   -webkit-font-smoothing: none; /* Keep fonts crisp */
   -moz-osx-font-smoothing: grayscale;
   font-smooth: never;
@@ -125,14 +120,12 @@ p {
 }
 
 .top-bar button {
-  height: 12px;
+  height: 14px;
   border: 1px solid #777;
   color: var(--text-color);
-  font-family: 'zen-3x5', sans-serif;
-  font-size: 5px;
   padding-left: 4px;
   padding-right: 4px;
-  padding-top: 2px; /* Reset for new font metrics */
+  padding-top: 1px; /* Center 12px font in 14px height */
   margin: 0;
   cursor: none;
   background: #d1d1d1;
@@ -536,6 +529,21 @@ p {
 .retro-input:focus {
   outline: none;
   border: 1px solid #000;
+}
+
+.retro-input:focus::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: #000;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
 }
 
 .time-picker {

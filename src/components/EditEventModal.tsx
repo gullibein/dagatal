@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { PixelText } from './PixelText';
+import { PixelInput } from './PixelInput';
 import { CalendarEvent, EventReminder } from '../types';
 import { RetroSelect } from './RetroSelect';
 
@@ -97,19 +99,23 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">Edit Event</div>
+        <div className="modal-header">
+          <PixelText text="Edit Event" color="var(--bg-color)" />
+        </div>
         
         <div className="modal-body scrollable-body">
-          <input 
-            className="retro-input block" 
+          <PixelInput 
             placeholder="Event Title" 
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={setTitle}
             autoFocus
+            block
           />
           
           <div className="form-row">
-            <label>Time</label>
+            <label>
+              <PixelText text="Time" />
+            </label>
             <div className="time-picker" style={{ flex: 1, justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <div className="narrow-select">
@@ -143,28 +149,36 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
           </div>
 
           <div className="form-row">
-            <label>Length</label>
+            <label>
+              <PixelText text="Length" />
+            </label>
             <RetroSelect value={durationMinutes} options={durationOptions} onChange={setDurationMinutes} />
           </div>
 
           <div className="form-row">
-            <label>Repeat</label>
+            <label>
+              <PixelText text="Repeat" />
+            </label>
             <RetroSelect value={repeatPattern} options={repeatOptions} onChange={setRepeatPattern} />
           </div>
 
           <div className="form-row">
-            <label>Place</label>
-            <input 
-              className="retro-input flex-1" 
+            <label>
+              <PixelText text="Place" />
+            </label>
+            <PixelInput 
               placeholder="Location..." 
               value={location}
-              onChange={e => setLocation(e.target.value)}
+              onChange={setLocation}
+              className="flex-1"
             />
           </div>
 
           <div className="form-row reminders-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '2px' }}>
-              <label>Reminders</label>
+              <label>
+                <PixelText text="Reminders" />
+              </label>
               {reminders.length < 5 && <button className="reminder-btn" onClick={addReminder}>+</button>}
             </div>
             {reminders.map(r => (
@@ -177,16 +191,24 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
                 <button className="reminder-btn danger" onClick={() => removeReminder(r.id)}>X</button>
               </div>
             ))}
-            {reminders.length === 0 && <span className="muted-text">No reminders</span>}
+            {reminders.length === 0 && <PixelText text="No reminders" color="#888" />}
           </div>
         </div>
 
         <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <button onClick={onClose}>Cancel</button>
-            {onShowLess && <button onClick={onShowLess}>Show Less</button>}
+            <button onClick={onClose}>
+              <PixelText text="Cancel" />
+            </button>
+            {onShowLess && (
+              <button onClick={onShowLess}>
+                <PixelText text="Less" />
+              </button>
+            )}
           </div>
-          <button className="primary" onClick={handleSave}>Save</button>
+          <button className="primary" onClick={handleSave}>
+            <PixelText text="Save" />
+          </button>
         </div>
       </div>
     </div>
