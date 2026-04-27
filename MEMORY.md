@@ -1,0 +1,6 @@
+# Core Directives for Dagatal (Retro Calendar)
+
+1. **TRUE NATIVE RESOLUTION (320x200)**: EVERYTHING must be drawn in actual, true 320x200 pixel resolution. This rule must NEVER be broken. 
+2. **Integer Layouts**: No sub-pixels or fractional pixels (like `1fr` or `%`) are allowed in CSS grid/flex layouts, as they break the physical pixel boundaries when scaled up. Explicit integer pixel widths must always be used.
+3. **Integer Scaling**: The main application wrapper must ONLY be scaled by an exact integer multiplier (`Math.floor(scale)`) to prevent physical pixel anti-aliasing or blurring of the low-res elements across high-res monitors.
+4. **Discrete Cursor Movement**: The custom mouse cursor coordinates must be rounded to the nearest whole integer (`Math.floor`) to prevent smooth sub-pixel sliding that ruins the illusion of a true 320x200 pixel grid.
