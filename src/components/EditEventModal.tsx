@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { PixelText } from './PixelText';
 import { PixelInput } from './PixelInput';
 import { CalendarEvent, EventReminder } from '../types';
@@ -21,10 +22,28 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
   const [hour, setHour] = useState(startD.getHours().toString().padStart(2, '0'));
   const [minute, setMinute] = useState(Math.round(startD.getMinutes() / 5 * 5).toString().padStart(2, '0'));
   
-  const [durationMinutes, setDurationMinutes] = useState((eventToEdit?.durationMinutes || 60).toString());
+  const initialDuration = eventToEdit?.durationMinutes || 60;
+  const [durDays, setDurDays] = useState(Math.floor(initialDuration / 1440).toString());
+  const [durHours, setDurHours] = useState(Math.floor((initialDuration % 1440) / 60).toString());
+  const [durMins, setDurMins] = useState((initialDuration % 60).toString());
+
   const [repeatPattern, setRepeatPattern] = useState(eventToEdit?.repeatPattern || 'none');
   const [location, setLocation] = useState(eventToEdit?.location || '');
-  const [reminders, setReminders] = useState<EventReminder[]>(eventToEdit?.reminders || []);
+  
+  // Convert minutesBefore to complex reminder objects
+  const [reminders, setReminders] = useState(() => (eventToEdit?.reminders || []).map(r => {
+    const total = r.minutesBefore;
+    const isAfter = total < 0;
+    const absTotal = Math.abs(total);
+    return {
+      id: r.id,
+      days: Math.floor(absTotal / 1440).toString(),
+      hours: Math.floor((absTotal % 1440) / 60).toString(),
+      mins: (absTotal % 60).toString(),
+      direction: isAfter ? 'after' : 'before'
+    };
+  }));
+
   const [color, setColor] = useState(eventToEdit?.color || COLORS[0]);
 
   // Listen for Escape key
@@ -43,40 +62,46 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
     eventDate.setHours(parseInt(hour, 10));
     eventDate.setMinutes(parseInt(minute, 10));
     
+    const totalDuration = (parseInt(durDays) * 1440) + (parseInt(durHours) * 60) + parseInt(durMins);
+
+    const processedReminders: EventReminder[] = reminders.map(r => {
+      const total = (parseInt(r.days) * 1440) + (parseInt(r.hours) * 60) + parseInt(r.mins);
+      return {
+        id: r.id,
+        minutesBefore: r.direction === 'after' ? -total : total
+      };
+    });
+    
     onSave({
       title,
       date: eventDate,
-      durationMinutes: parseInt(durationMinutes, 10),
+      durationMinutes: totalDuration,
       repeatPattern: repeatPattern as CalendarEvent['repeatPattern'],
       location,
-      reminders,
+      reminders: processedReminders,
       color
     });
   };
 
   const addReminder = () => {
     if (reminders.length >= 5) return;
-    setReminders([...reminders, { id: Math.random().toString(36).substring(7), minutesBefore: 15 }]);
+    setReminders([...reminders, { 
+      id: Math.random().toString(36).substring(7), 
+      days: '0', hours: '0', mins: '15', direction: 'before' 
+    }]);
   };
 
-  const updateReminder = (id: string, mins: number) => {
-    setReminders(reminders.map(r => r.id === id ? { ...r, minutesBefore: mins } : r));
+  const updateReminder = (id: string, updates: any) => {
+    setReminders(reminders.map(r => r.id === id ? { ...r, ...updates } : r));
   };
 
   const removeReminder = (id: string) => {
     setReminders(reminders.filter(r => r.id !== id));
   };
 
-  const durationOptions = [
-    { label: '15m', value: '15' },
-    { label: '30m', value: '30' },
-    { label: '45m', value: '45' },
-    { label: '1h', value: '60' },
-    { label: '1.5h', value: '90' },
-    { label: '2h', value: '120' },
-    { label: '3h', value: '180' },
-    { label: 'All Day', value: '1440' }
-  ];
+  const dayOptions = Array.from({ length: 31 }).map((_, i) => i.toString());
+  const hourOptions = Array.from({ length: 24 }).map((_, i) => i.toString());
+  const minOptions = ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
 
   const repeatOptions = [
     { label: 'None', value: 'none' },
@@ -86,21 +111,11 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
     { label: 'Yearly', value: 'yearly' }
   ];
 
-  const reminderOptions = [
-    { label: '5m before', value: '5' },
-    { label: '10m before', value: '10' },
-    { label: '15m before', value: '15' },
-    { label: '30m before', value: '30' },
-    { label: '1h before', value: '60' },
-    { label: '2h before', value: '120' },
-    { label: '1d before', value: '1440' }
-  ];
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <PixelText text="Edit Event" color="var(--bg-color)" />
+          <PixelText text={`Edit Event - ${format(startD, 'dd. MMM yyyy')}`} color="var(--bg-color)" />
         </div>
         
         <div className="modal-body scrollable-body">
@@ -152,14 +167,27 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
             <label>
               <PixelText text="Length" />
             </label>
-            <RetroSelect value={durationMinutes} options={durationOptions} onChange={setDurationMinutes} />
+            <div className="multi-select-row" style={{ marginTop: '-4px' }}>
+              <div className="unit-select">
+                <PixelText text="D" />
+                <RetroSelect value={durDays} options={dayOptions} onChange={setDurDays} />
+              </div>
+              <div className="unit-select">
+                <PixelText text="H" />
+                <RetroSelect value={durHours} options={hourOptions} onChange={setDurHours} />
+              </div>
+              <div className="unit-select">
+                <PixelText text="M" />
+                <RetroSelect value={durMins} options={minOptions} onChange={setDurMins} />
+              </div>
+            </div>
           </div>
 
           <div className="form-row">
             <label>
               <PixelText text="Repeat" />
             </label>
-            <RetroSelect value={repeatPattern} options={repeatOptions} onChange={setRepeatPattern} />
+            <RetroSelect value={repeatPattern} options={repeatOptions} onChange={setRepeatPattern} className="wide-select" />
           </div>
 
           <div className="form-row">
@@ -179,23 +207,47 @@ export function EditEventModal({ initialDate, eventToEdit, onSave, onClose, onSh
               <label>
                 <PixelText text="Reminders" />
               </label>
-              {reminders.length < 5 && <button className="reminder-btn" onClick={addReminder}>+</button>}
+              {reminders.length < 5 && (
+                <button className="reminder-btn add-reminder-btn" onClick={addReminder}>
+                  <PixelText text="+" />
+                </button>
+              )}
             </div>
             {reminders.map(r => (
-              <div key={r.id} className="reminder-item" style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                <RetroSelect 
-                  value={r.minutesBefore.toString()} 
-                  options={reminderOptions} 
-                  onChange={(v) => updateReminder(r.id, parseInt(v))} 
-                />
-                <button className="reminder-btn danger" onClick={() => removeReminder(r.id)}>X</button>
+              <div key={r.id} className="reminder-complex-item">
+                <div className="reminder-inputs">
+                  <div className="unit-select">
+                    <PixelText text="D" />
+                    <RetroSelect value={r.days} options={dayOptions} onChange={(v) => updateReminder(r.id, { days: v })} />
+                  </div>
+                  <div className="unit-select">
+                    <PixelText text="H" />
+                    <RetroSelect value={r.hours} options={hourOptions} onChange={(v) => updateReminder(r.id, { hours: v })} />
+                  </div>
+                  <div className="unit-select">
+                    <PixelText text="M" />
+                    <RetroSelect value={r.mins} options={minOptions} onChange={(v) => updateReminder(r.id, { mins: v })} />
+                  </div>
+                  <div className="unit-select">
+                    <button 
+                      className="toggle-btn" 
+                      onClick={() => updateReminder(r.id, { direction: r.direction === 'before' ? 'after' : 'before' })}
+                      style={{ width: '42px', height: '9px', padding: 0 }}
+                    >
+                      <PixelText text={r.direction.toUpperCase()} />
+                    </button>
+                  </div>
+                </div>
+                <button className="reminder-btn danger" onClick={() => removeReminder(r.id)}>
+                  <PixelText text="X" />
+                </button>
               </div>
             ))}
             {reminders.length === 0 && <PixelText text="No reminders" color="#888" />}
           </div>
         </div>
 
-        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '4px 6px 4px 2px' }}>
           <div style={{ display: 'flex', gap: '4px' }}>
             <button onClick={onClose}>
               <PixelText text="Cancel" />

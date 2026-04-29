@@ -117,9 +117,10 @@ interface CalendarViewProps {
   onEventRightClick?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onUpdateEvent?: (e: CalendarEvent) => void;
   mousePos: { x: number; y: number };
+  hideHoverLine?: boolean;
 }
 
-export function CalendarView({ events, onAddEventClick, onRightClick, onEventRightClick, onUpdateEvent, mousePos }: CalendarViewProps) {
+export function CalendarView({ events, onAddEventClick, onRightClick, onEventRightClick, onUpdateEvent, mousePos, hideHoverLine }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   
@@ -225,7 +226,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
       <div className="grid grid-7 month-grid">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
           <div key={i} className="day-header">
-            <PixelText text={d} />
+            <PixelText text={d} noShift />
           </div>
         ))}
         {days.map((day, i) => {
@@ -295,7 +296,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                   const dayEvents = isCurrentMonth ? events.filter(e => isEventOnDay(e, day)) : [];
                   const firstEvent = dayEvents[0];
                   
-                  const isToday = isSameDay(day, new Date());
+                  const isToday = isSameDay(day, new Date()) && isCurrentMonth;
                   
                   return (
                     <div 
@@ -490,8 +491,8 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
     if (viewMode === 'day') {
       const boxTop = 32;
       const boxBottom = 191;
-      const clampedY = Math.max(boxTop, Math.min(boxBottom, mousePos.y));
-      const mouseInnerY = clampedY - boxTop + zoomScroll;
+      const clampedY = Math.max(boxTop - 3, Math.min(boxBottom + 3, mousePos.y));
+      const mouseInnerY = clampedY - boxTop + zoomScroll + 3;
       
       const dayEvents = events.filter(ev => isEventOnDay(ev, currentDate));
       const layouts = calculateEventLayouts(dayEvents);
@@ -635,11 +636,11 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
     if (viewMode === 'day' || viewMode === 'week') {
       const boxTop = viewMode === 'day' ? 32 : 37;
       const boxBottom = viewMode === 'day' ? 191 : 194;
-      const clampedY = Math.max(boxTop, Math.min(boxBottom, mousePos.y));
+      const clampedY = Math.max(boxTop - 3, Math.min(boxBottom + 3, mousePos.y));
       const localZoomScroll = viewMode === 'day' ? zoomScroll : 0;
       const localZoomHeight = viewMode === 'day' ? zoomHeight : (boxBottom - boxTop) / 48;
       
-      const mouseInnerY = clampedY - boxTop + localZoomScroll;
+      const mouseInnerY = clampedY - boxTop + localZoomScroll + 3;
 
       if (viewMode === 'day') {
         const dayEvents = events.filter(ev => isEventOnDay(ev, targetDate));
@@ -729,7 +730,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
   };
 
   // Shared hover logic for Day and Week views
-  if ((viewMode === 'day' || viewMode === 'week') && mousePos.x >= 2 && mousePos.x <= 318) {
+  if ((viewMode === 'day' || viewMode === 'week') && mousePos.x >= 2 && mousePos.x <= 354) {
     let boxTop = 32;
     let boxBottom = 191;
     let localZoomHeight = zoomHeight;
@@ -743,9 +744,9 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
       localZoomScroll = 0; // No zoom in week view yet
     }
 
-    if (mousePos.y >= (boxTop - 6) && mousePos.y <= (boxBottom + 6) && !draggingEventId.current) {
+    if (mousePos.y >= (boxTop - 6) && mousePos.y <= (boxBottom + 6) && !draggingEventId.current && !hideHoverLine) {
       showLine = true;
-      const clampedY = Math.max(boxTop, Math.min(boxBottom, mousePos.y));
+      const clampedY = Math.max(boxTop - 3, Math.min(boxBottom + 3, mousePos.y));
       hoverLineY = clampedY;
 
       if (isAnimating) {
@@ -757,7 +758,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
         timeStr = `${Math.max(0, h)}:${m.toString().padStart(2, '0')}`;
       } else {
         // Grid-aware time mapping
-        // Offset of 3 compensates for boxTop=32 in day view, exactly matching the visual font baseline.
+        // Offset of 3 compensates for boxTop=32 in day view, shifted to user preference.
         // Week view retains -1 offset for boxTop=37.
         const offset = viewMode === 'day' ? 3 : -1; 
         const relativeY = clampedY - boxTop + localZoomScroll + offset;
@@ -794,34 +795,35 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
           onWheel={handleWheel}
           style={{ 
             position: 'absolute', 
-            top: viewMode === 'day' ? '32px' : '37px', 
+            top: viewMode === 'day' ? '27px' : '35px', 
             left: '2px', 
-            width: '316px', 
-            height: viewMode === 'day' ? '160px' : '157px', 
-            zIndex: 100,
+            width: '352px', 
+            height: viewMode === 'day' ? '168px' : '159px', 
+            zIndex: 5,
             cursor: 'none',
             background: 'rgba(0,0,0,0)'
           }}
         >
           {(() => {
             if (viewMode === 'day') {
-              const y = hoverLineY - 32;
+              const y = hoverLineY - 27;
+              const clampedX = Math.max(34, mousePos.x);
               return (
                 <>
                   <svg className="hover-line-svg">
                     <line 
-                      x1={34} y1={y} x2={mousePos.x - 2} y2={y} 
+                      x1={34} y1={y} x2={clampedX - 2} y2={y} 
                       stroke="#555" strokeWidth={1} shapeRendering="crispEdges" 
                     />
                     <line 
-                      x1={mousePos.x + 36} y1={y} x2={316} y2={y} 
+                      x1={clampedX + 36} y1={y} x2={352} y2={y} 
                       stroke="#555" strokeWidth={1} shapeRendering="crispEdges" 
                     />
                   </svg>
                   <div 
                     className="hover-time-label" 
                     style={{ 
-                      transform: `translate(${mousePos.x + 4}px, ${y - 3}px)`,
+                      transform: `translate(${clampedX + 4}px, ${y - 3}px)`,
                       top: 0, left: 0, position: 'absolute',
                       pointerEvents: 'none'
                     }}
@@ -832,14 +834,16 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
               );
             } else {
               // Week View Logic
-              const widths = [44, 44, 44, 45, 44, 44, 45];
+              const widths = [49, 49, 49, 50, 50, 50, 49];
               let currentLeft = 0;
               let colIndex = -1;
+              let foundColLeft = 0;
               for (let i = 0; i < widths.length; i++) {
                 const start = currentLeft;
                 const end = currentLeft + widths[i];
                 if (mousePos.x >= start && mousePos.x <= end + 1) {
                   colIndex = i;
+                  foundColLeft = currentLeft;
                   break;
                 }
                 currentLeft += widths[i] + 1;
@@ -847,24 +851,33 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
 
               if (colIndex === -1) return null;
 
-              const colLeft = [0, 45, 90, 135, 181, 226, 271][colIndex];
+              const colLeft = foundColLeft;
               const colWidth = widths[colIndex];
               const labelWidth = 24;
-              const y = hoverLineY - 37;
+              const yRaw = hoverLineY - 37;
+              const y = yRaw;
+              
+              // Flip label to below the line if too close to top
+              const isTooCloseToTop = yRaw < 8;
+              const labelTop = isTooCloseToTop ? (y + 7) : (y - 7);
 
               return (
                 <>
                   <svg className="hover-line-svg">
                     <line 
-                      x1={colLeft} y1={y} x2={colLeft + colWidth - labelWidth - 2} y2={y} 
+                      x1={colLeft} y1={y} x2={colLeft + colWidth} y2={y} 
                       stroke="#555" strokeWidth={1} shapeRendering="crispEdges" 
                     />
                   </svg>
                   <div 
                     className="hover-time-label" 
                     style={{ 
-                      transform: `translate(${colLeft + colWidth - labelWidth}px, ${y - 3}px)`,
-                      top: 0, left: 0, position: 'absolute',
+                      left: `${colLeft}px`,
+                      width: `${colWidth}px`,
+                      top: `${labelTop}px`,
+                      position: 'absolute',
+                      display: 'flex',
+                      justifyContent: 'center',
                       pointerEvents: 'none'
                     }}
                   >

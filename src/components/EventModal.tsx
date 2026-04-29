@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { PixelText } from './PixelText';
 import { PixelInput } from './PixelInput';
 import { RetroSelect } from './RetroSelect';
@@ -40,7 +41,7 @@ export function EventModal({ initialDate, onSave, onClose, onEdit }: EventModalP
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <PixelText text="New Event" color="var(--bg-color)" />
+          <PixelText text={`New Event - ${format(initialDate, 'dd. MMM yyyy')}`} color="var(--bg-color)" />
         </div>
         
         <div className="modal-body">

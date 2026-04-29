@@ -29,18 +29,6 @@ export const PixelInput: React.FC<PixelInputProps> = ({
     <div 
       className={`pixel-input-wrapper ${block ? 'block' : ''} ${className}`}
       onClick={handleClick}
-      style={{
-        position: 'relative',
-        cursor: 'none',
-        display: block ? 'flex' : 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 4px',
-        backgroundColor: '#fff',
-        border: '1px solid #777',
-        height: '14px',
-        boxSizing: 'border-box',
-        overflow: 'hidden'
-      }}
     >
       {/* Hidden real input for focus and typing */}
       <input
@@ -69,20 +57,29 @@ export const PixelInput: React.FC<PixelInputProps> = ({
       
       {/* Visual overlay with PNG font */}
       <div style={{ position: 'relative', pointerEvents: 'none', display: 'flex', alignItems: 'center' }}>
+        {isFocused && value === '' && (
+          <div className="pixel-caret" style={{
+            width: '1px',
+            height: '7px',
+            backgroundColor: 'black',
+            marginRight: '1px'
+          }} />
+        )}
+
         {value === '' ? (
           <PixelText text={placeholder} color="#aaa" />
         ) : (
-          <PixelText text={value} color="black" />
-        )}
-        
-        {/* Custom blinking caret */}
-        {isFocused && (
-          <div className="pixel-caret" style={{
-            width: '1px',
-            height: '9px',
-            backgroundColor: 'black',
-            marginLeft: '1px'
-          }} />
+          <>
+            <PixelText text={value} color="black" />
+            {isFocused && (
+              <div className="pixel-caret" style={{
+                width: '1px',
+                height: '7px',
+                backgroundColor: 'black',
+                marginLeft: '1px'
+              }} />
+            )}
+          </>
         )}
       </div>
     </div>

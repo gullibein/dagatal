@@ -1,28 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PixelText } from './PixelText';
 
 export function RetroSelect({ 
   value, 
   options, 
-  onChange 
+  onChange,
+  className = ''
 }: { 
   value: string; 
   options: { label: string; value: string }[] | string[]; 
   onChange: (v: string) => void;
+  className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
   
   const displayValue = typeof options[0] === 'string' 
     ? value 
     : (options as {label: string, value: string}[]).find(o => o.value === value)?.label || value;
   
   return (
-    <div className="retro-select-container">
+    <div className={`retro-select-container ${className}`} ref={containerRef}>
       <div className="retro-select-value" onClick={() => setIsOpen(!isOpen)}>
         <PixelText text={displayValue} />
-        <div className="retro-select-arrow">
-          <PixelText text="v" />
-        </div>
       </div>
       {isOpen && (
         <div className="retro-select-dropdown">

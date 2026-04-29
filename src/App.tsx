@@ -21,6 +21,7 @@ function App() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, date: Date, event?: CalendarEvent } | null>(null);
+  const [isMouseInside, setIsMouseInside] = useState(false);
 
   const handleAddEventClick = (date: Date) => {
     setSelectedDate(date);
@@ -113,7 +114,7 @@ function App() {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
       
-      const maxPhysicalScaleX = Math.floor((windowWidth * dpr) / 320);
+      const maxPhysicalScaleX = Math.floor((windowWidth * dpr) / 356);
       const maxPhysicalScaleY = Math.floor((windowHeight * dpr) / 200);
       let physicalScale = Math.min(maxPhysicalScaleX, maxPhysicalScaleY);
       
@@ -126,7 +127,7 @@ function App() {
 
       // Force strict integer PHYSICAL positioning to prevent sub-pixel blurring
       if (containerRef.current) {
-        const scaledWidth = 320 * exactCssScale;
+        const scaledWidth = 356 * exactCssScale;
         const scaledHeight = 200 * exactCssScale;
         
         // Logical centering
@@ -153,16 +154,20 @@ function App() {
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
+        const xRaw = (e.clientX - rect.left) / scale;
+        const yRaw = (e.clientY - rect.top) / scale;
         
-        // Use the raw bounding rect. Since the container is locked to physical pixels,
-        // and the scale forces internal logical pixels to map exactly to physical pixels,
-        // this calculation will perfectly map the mouse back to the 320x200 grid.
-        const x = Math.floor((e.clientX - rect.left) / scale);
-        const y = Math.floor((e.clientY - rect.top) / scale);
+        const inside = xRaw >= 0 && xRaw < 356 && yRaw >= 0 && yRaw < 200;
+        setIsMouseInside(inside);
+
+        const x = Math.floor(xRaw);
+        const y = Math.floor(yRaw);
         
-        const clampedX = Math.max(0, Math.min(319, x));
+        const clampedX = Math.max(0, Math.min(355, x));
         const clampedY = Math.max(0, Math.min(199, y));
         setMousePos({ x: clampedX, y: clampedY });
+      } else {
+        setIsMouseInside(false);
       }
     };
 
@@ -177,36 +182,38 @@ function App() {
         className="game-container" 
         style={{ transform: `scale(${scale})` }}
       >
-        {/* Custom cursor element: True native canvas pixels */}
-        {/* Custom cursor element: True native canvas pixels */}
-        <canvas 
-          className="custom-cursor" 
-          width={4} 
-          height={5}
-          style={{ 
-            left: `${mousePos.x}px`,
-            top: `${mousePos.y}px`,
-            position: 'absolute'
-          }} 
-          ref={canvas => {
-            if (canvas) {
-              const ctx = canvas.getContext('2d');
-              if (ctx) {
-                // Draw 11 absolute physical pixels into the buffer
-                ctx.clearRect(0,0,4,5);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0,0,2,1); // Row 0
-                ctx.fillRect(0,1,3,1); // Row 1
-                ctx.fillRect(0,2,4,1); // Row 2
-                ctx.fillRect(0,3,1,1); // Row 3
-                ctx.fillRect(0,4,1,1); // Row 4
+        {isMouseInside && (
+          <canvas 
+            className="custom-cursor" 
+            width={8} 
+            height={8}
+            style={{ 
+              left: `${mousePos.x}px`, 
+              top: `${mousePos.y}px`,
+              position: 'absolute',
+              zIndex: 1000,
+              pointerEvents: 'none'
+            }} 
+            ref={canvas => {
+              if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  const cursorData = [[1,1,1,1,0,0,0,0],[1,1,1,0,0,0,0,0],[1,1,1,1,0,0,0,0],[1,0,1,1,1,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
+                  ctx.clearRect(0, 0, 8, 8);
+                  ctx.fillStyle = 'black';
+                  cursorData.forEach((row, r) => {
+                    row.forEach((val, c) => {
+                      if (val) ctx.fillRect(c, r, 1, 1);
+                    });
+                  });
+                }
               }
-            }
-          }}
-        />
+            }}
+          />
+        )}
         
-        <CalendarView 
-          events={events} 
+        <CalendarView
+          events={events}
           onAddEventClick={handleAddEventClick}
           onRightClick={handleAddEventClick}
           onEventRightClick={handleEventRightClick}
@@ -214,6 +221,7 @@ function App() {
             setEvents(events.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev));
           }}
           mousePos={mousePos}
+          hideHoverLine={showModal || showEditModal}
         />
 
         {contextMenu && (

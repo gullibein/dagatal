@@ -1,4 +1,9 @@
-/* Global font family removed. Using PixelText component for all rendering. */
+@font-face {
+  font-family: 'TinyAndChunkyRegular';
+  src: url('/TinyAndChunkyRegular-m2Dz5.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 :root {
   --bg-color: #d1d1d1; /* Light grey retro background */
@@ -13,8 +18,7 @@ body, html {
   height: 100vh;
   background-color: #000; /* Black borders outside the container */
   overflow: hidden; /* Prevent scrolling */
-  cursor: none; /* Hide default cursor */
-  /* font-family removed */
+  font-family: 'TinyAndChunkyRegular', sans-serif;
   -webkit-font-smoothing: none; /* Keep fonts crisp */
   -moz-osx-font-smoothing: grayscale;
   font-smooth: never;
@@ -34,7 +38,6 @@ input, select, button, textarea {
   font-size: inherit;
   -webkit-font-smoothing: none;
   font-smooth: never;
-  cursor: none !important;
 }
 
 /* Wrapper to center the scaled container manually */
@@ -46,7 +49,7 @@ input, select, button, textarea {
 
 /* The actual 320x200 pixel perfect container */
 .game-container {
-  width: 320px;
+  width: 356px;
   height: 200px;
   background-color: var(--bg-color);
   position: absolute;
@@ -55,6 +58,10 @@ input, select, button, textarea {
   transform-origin: top left; /* Strict origin ensures integer scaling doesn't shift sub-pixels */
   /* Use box-shadow instead of border to prevent layout shifting */
   box-shadow: 0 0 0 1px #ffffff;
+  font-family: 'TinyAndChunkyRegular', sans-serif;
+  font-size: 5px;
+  line-height: 1;
+  cursor: none;
 }
 
 .content {
@@ -120,17 +127,15 @@ p {
 }
 
 .top-bar button {
-  height: 14px;
+  height: 11px;
   border: 1px solid #777;
   color: var(--text-color);
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-top: 1px; /* Center 12px font in 14px height */
+  padding: 0 2px 0 3px;
   margin: 0;
   cursor: none;
   background: #d1d1d1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   line-height: 1;
 }
@@ -156,13 +161,12 @@ p {
 .current-date-title {
   font-size: 5px;
   margin: 0;
-  padding-top: 2px; /* Reset for new font metrics */
+  padding-top: 1px;
   display: inline-block;
   width: 120px;
   text-align: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.5;
 }
 
 .add-btn {
@@ -185,13 +189,13 @@ p {
 
 .grid-7 {
   gap: 1px;
-  grid-template-columns: 44px 44px 44px 45px 44px 44px 45px;
+  grid-template-columns: 49px 49px 49px 50px 50px 50px 49px;
 }
 
 .grid-year {
   display: grid;
-  grid-template-columns: 78px 1px 78px 2px 78px 1px 78px;
-  grid-template-rows: 58px 1px 58px 1px 58px;
+  grid-template-columns: 87px 1px 87px 2px 87px 1px 87px;
+  grid-template-rows: 56px 4px 56px 4px 56px;
   gap: 0;
   padding: 0;
   margin: 0;
@@ -200,7 +204,7 @@ p {
 /* Month View */
 .month-grid {
   gap: 1px;
-  grid-template-columns: 44px 44px 44px 45px 44px 44px 45px;
+  grid-template-columns: 49px 49px 49px 50px 50px 50px 49px;
   grid-template-rows: 12px 31px 32px 32px 32px 32px;
 }
 
@@ -259,8 +263,8 @@ p {
   padding: 0;
   display: flex;
   flex-direction: column;
-  width: 78px;
-  height: 58px;
+  width: 87px;
+  height: 56px;
   box-sizing: border-box;
 }
 
@@ -279,18 +283,18 @@ p {
 
 .mini-month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 10px);
+  grid-template-columns: repeat(7, 11px);
   grid-template-rows: repeat(6, 6px);
   gap: 1px;
-  padding: 2px 0 0 0;
-  width: 76px;
-  height: 41px;
+  padding: 1px 3px 3px 1px;
+  width: 87px;
+  height: 43px;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
 .tiny-day {
-  width: 10px;
+  width: 11px;
   height: 6px;
   background-color: #888;
   box-sizing: border-box;
@@ -304,6 +308,11 @@ p {
   background-color: var(--accent-color);
 }
 
+.tiny-day.is-today {
+  outline: 1px solid #ff0000;
+  outline-offset: -1px;
+}
+
 .is-today {
   color: #ff0000 !important;
 }
@@ -315,7 +324,7 @@ p {
 /* Week View */
 .week-grid {
   gap: 1px;
-  grid-template-columns: 44px 44px 44px 45px 44px 44px 45px;
+  grid-template-columns: 49px 49px 49px 50px 50px 50px 49px;
   grid-template-rows: 100%;
 }
 
@@ -340,9 +349,6 @@ p {
   overflow: hidden;
 }
 
-.week-day-body:hover {
-  background: #eeeeee;
-}
 
 .event-item {
   font-size: 5px;
@@ -357,6 +363,7 @@ p {
   white-space: nowrap;
   line-height: 1;
   border-bottom: 1px solid rgba(0,0,0,0.2);
+  z-index: 10;
 }
 
 /* Day View */
@@ -394,7 +401,7 @@ p {
 
 .hour-label-locked {
   position: absolute;
-  top: -2px;
+  top: -1px;
   transform: translateY(-50%); /* Center on the hour boundary */
   left: 2px;
   font-size: 5px;
@@ -444,6 +451,7 @@ p {
 }
 
 .event-title {
+  margin-left: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -512,7 +520,7 @@ p {
 }
 
 .retro-input {
-  font-family: 'zen-3x5', sans-serif;
+  font-family: 'TinyAndChunkyRegular', sans-serif;
   font-size: 5px;
   border: 1px solid #888;
   padding: 1px 2px;
@@ -560,16 +568,42 @@ p {
 .retro-select-value {
   border: 1px solid #888;
   background: #fff;
-  padding: 1px 2px;
+  padding: 0;
+  height: 9px;
+  box-sizing: border-box;
   cursor: none;
-  font-family: 'zen-3x5', sans-serif;
+  font-family: 'TinyAndChunkyRegular', sans-serif;
   font-size: 5px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 36px;
   -webkit-font-smoothing: none;
   font-smooth: never;
+}
+
+.pixel-input-wrapper {
+  position: relative;
+  cursor: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  background-color: #ffffff;
+  border: 1px solid #777;
+  height: 9px;
+  min-height: 9px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.pixel-input-wrapper.block {
+  display: flex;
+  width: 100%;
+}
+
+.pixel-input-wrapper.flex-1 {
+  flex: 1;
 }
 
 .narrow-select {
@@ -612,11 +646,6 @@ p {
   border-color: #000;
 }
 
-.retro-select-arrow {
-  font-size: 5px;
-  line-height: 1;
-}
-
 .retro-select-dropdown {
   position: absolute;
   top: 100%;
@@ -637,7 +666,7 @@ p {
 .retro-select-option {
   padding: 1px 2px;
   cursor: none;
-  font-family: 'zen-3x5', sans-serif;
+  font-family: 'TinyAndChunkyRegular', sans-serif;
   font-size: 5px;
 }
 
@@ -656,11 +685,17 @@ p {
 }
 
 button {
-  font-family: 'zen-3x5', sans-serif;
+  font-family: 'TinyAndChunkyRegular', sans-serif;
   font-size: 5px;
   border: 1px solid #777;
   background: #d1d1d1;
   cursor: none;
+  height: 9px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   -webkit-font-smoothing: none;
   font-smooth: never;
 }
@@ -771,6 +806,10 @@ button.primary {
   width: 110px; /* 2x wider dropdown */
 }
 
+.wide-select .retro-select-value {
+  width: 54px; /* 1.5x wider than default 36px */
+}
+
 .reminder-btn {
   background: transparent;
   color: black;
@@ -784,9 +823,48 @@ button.primary {
   justify-content: center;
 }
 
+.multi-select-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.unit-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.unit-select .retro-select-value {
+  width: 17px; /* 30% narrower than 24px */
+}
+
+.reminder-complex-item {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+  gap: 2px;
+}
+
+.reminder-inputs {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  flex: 1;
+}
+
+
+
 .reminder-btn.danger {
   background: #aa0000;
   color: white;
+}
+
+.add-reminder-btn > * {
+  margin-left: 1px;
 }
 
 .muted-text {
@@ -827,3 +905,124 @@ button.primary {
   font-size: 5px;
   margin-bottom: 4px;
 }
+
+/* =========================================
+   FONT VIEWER STYLES
+   ========================================= */
+
+.font-viewer-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  padding: 2px;
+}
+
+.font-viewer-header {
+  background: #a0a0a0;
+  border-bottom: 1px solid #777;
+  padding: 2px 4px;
+  margin-bottom: 2px;
+}
+
+.font-viewer-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 2px;
+}
+
+.view-mode-buttons {
+  display: flex;
+  gap: 1px;
+}
+
+.view-mode-buttons button {
+  height: 12px;
+  padding: 1px 4px;
+}
+
+.view-mode-buttons button.active {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+.loading-message,
+.error-message,
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error-message {
+  color: #aa0000;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.font-viewer-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.character-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 1px;
+  overflow-y: auto;
+  padding: 2px;
+  background: #c0c0c0;
+  border: 1px solid #a0a0a0;
+}
+
+.character-cell {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e0e0;
+  padding: 2px;
+}
+
+.character-cell:hover {
+  background: #fff;
+  border-color: #000;
+}
+
+.character-cell.selected {
+  background: var(--accent-color);
+  border-color: #000;
+  color: #000;
+}
+
+.character-details {
+  width: 80px;
+  background: #c0c0c0;
+  border: 1px solid #a0a0a0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dotted #999;
+  padding-bottom: 2px;
+}
+
