@@ -20,34 +20,55 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   
-  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, date: Date, event?: CalendarEvent } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ 
+    x: number, 
+    y: number, 
+    date: Date, 
+    event?: CalendarEvent,
+    selection?: { start: Date, end: Date }
+  } | null>(null);
   const [isMouseInside, setIsMouseInside] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
 
-  const handleAddEventClick = (date: Date) => {
+  const handleAddEventClick = (date: Date, duration?: number) => {
     setSelectedDate(date);
     setEditingEvent(undefined);
+    setDraftTitle('');
+    setDraftDuration(duration);
     setShowModal(true);
     setContextMenu(null);
+    setCurrentSelection(null); // Clear selection when modal opens
   };
 
-  const handleEventRightClick = (e: React.MouseEvent, event: CalendarEvent) => {
-    setContextMenu({ x: mousePos.x, y: mousePos.y, date: event.date, event });
+  const [draftDuration, setDraftDuration] = useState<number | undefined>(undefined);
+  const [currentSelection, setCurrentSelection] = useState<{ start: Date, end: Date } | null>(null);
+
+  const handleSelectionComplete = (selection: { start: Date, end: Date }, x: number, y: number) => {
+    // Show context menu with selection info
+    setCurrentSelection(selection);
+    setContextMenu({ x, y, date: selection.start, selection });
   };
 
-  const handleSaveEvent = (title: string, date: Date, color: string) => {
+  const handleEventRightClick = (e: React.MouseEvent, event: CalendarEvent, hoveredDate: Date) => {
+    setContextMenu({ x: mousePos.x, y: mousePos.y, date: hoveredDate, event });
+  };
+
+  const handleSaveEvent = (title: string, date: Date, color: string, duration?: number) => {
     if (editingEvent) {
-      setEvents(events.map(ev => ev.id === editingEvent.id ? { ...ev, title, date, color } : ev));
+      setEvents(events.map(ev => ev.id === editingEvent.id ? { ...ev, title, date, color, durationMinutes: duration || ev.durationMinutes } : ev));
     } else {
       const newEvent: CalendarEvent = {
         id: Math.random().toString(36).substring(7),
         title,
         date,
         color,
-        durationMinutes: 60
+        durationMinutes: duration !== undefined ? duration : (draftDuration || 60)
       };
       setEvents([...events, newEvent]);
     }
     setShowModal(false);
+    setDraftDuration(undefined);
+    setCurrentSelection(null);
   };
 
   const handleSaveAdvancedEvent = (eventData: Partial<CalendarEvent>) => {
@@ -58,7 +79,7 @@ function App() {
         id: Math.random().toString(36).substring(7),
         title: eventData.title || 'Event',
         date: eventData.date || new Date(),
-        durationMinutes: eventData.durationMinutes || 60,
+        durationMinutes: eventData.durationMinutes || draftDuration || 60,
         repeatPattern: eventData.repeatPattern || 'none',
         location: eventData.location,
         reminders: eventData.reminders,
@@ -67,6 +88,8 @@ function App() {
       setEvents([...events, newEvent]);
     }
     setShowEditModal(false);
+    setDraftDuration(undefined);
+    setCurrentSelection(null);
   };
   
   const [activeAlarms, setActiveAlarms] = useState<{ id: string; eventTitle: string; message: string }[]>([]);
@@ -124,6 +147,7 @@ function App() {
       const exactCssScale = physicalScale / dpr;
 
       setScale(exactCssScale);
+      document.documentElement.style.setProperty('--app-scale', exactCssScale.toString());
 
       // Force strict integer PHYSICAL positioning to prevent sub-pixel blurring
       if (containerRef.current) {
@@ -217,41 +241,75 @@ function App() {
           onAddEventClick={handleAddEventClick}
           onRightClick={handleAddEventClick}
           onEventRightClick={handleEventRightClick}
+          onSelectionComplete={handleSelectionComplete}
           onUpdateEvent={(updatedEvent) => {
             setEvents(events.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev));
           }}
+          selection={currentSelection}
           mousePos={mousePos}
           hideHoverLine={showModal || showEditModal}
         />
 
         {contextMenu && (
-          <div className="context-menu-overlay" onClick={() => setContextMenu(null)}>
+          <div 
+            className="context-menu-overlay" 
+            onClick={() => {
+              setContextMenu(null);
+              setCurrentSelection(null);
+            }}
+          >
             <div 
               className="context-menu" 
               style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
               onClick={e => e.stopPropagation()}
             >
-              {contextMenu.event && (
+              {contextMenu.event ? (
                 <div 
                   className="context-menu-item" 
                   onClick={() => {
                     setEditingEvent(contextMenu.event);
                     setSelectedDate(contextMenu.event!.date);
+                    setDraftTitle('');
                     setShowEditModal(true);
                     setContextMenu(null);
                   }}
                 >
                   <PixelText text="Edit" />
                 </div>
+              ) : contextMenu.selection ? (
+                <div 
+                  className="context-menu-item" 
+                  onClick={() => {
+                    const dur = Math.round((contextMenu.selection!.end.getTime() - contextMenu.selection!.start.getTime()) / 60000);
+                    handleAddEventClick(contextMenu.selection!.start, Math.abs(dur));
+                  }}
+                >
+                  <PixelText text="Create" />
+                </div>
+              ) : null}
+              
+              {!contextMenu.selection && (
+                <div 
+                  className="context-menu-item" 
+                  onClick={() => {
+                    handleAddEventClick(contextMenu.date);
+                  }}
+                >
+                  <PixelText text="Add New" />
+                </div>
               )}
-              <div 
-                className="context-menu-item" 
-                onClick={() => {
-                  handleAddEventClick(contextMenu.date);
-                }}
-              >
-                <PixelText text="Add New" />
-              </div>
+
+              {contextMenu.selection && (
+                <div 
+                  className="context-menu-item" 
+                  onClick={() => {
+                    setContextMenu(null);
+                    setCurrentSelection(null);
+                  }}
+                >
+                  <PixelText text="Cancel" />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -259,9 +317,15 @@ function App() {
         {showModal && (
           <EventModal 
             initialDate={selectedDate}
+            initialTitle={draftTitle}
+            initialDuration={draftDuration}
             onSave={handleSaveEvent}
-            onClose={() => setShowModal(false)}
-            onEdit={() => {
+            onClose={() => {
+              setShowModal(false);
+              setCurrentSelection(null);
+            }}
+            onEdit={(title) => {
+              setDraftTitle(title);
               setShowModal(false);
               setShowEditModal(true);
             }}
@@ -272,9 +336,15 @@ function App() {
           <EditEventModal 
             initialDate={selectedDate}
             eventToEdit={editingEvent}
+            initialTitle={draftTitle}
+            initialDuration={draftDuration}
             onSave={handleSaveAdvancedEvent}
-            onClose={() => setShowEditModal(false)}
-            onShowLess={() => {
+            onClose={() => {
+              setShowEditModal(false);
+              setCurrentSelection(null);
+            }}
+            onShowLess={(title) => {
+              setDraftTitle(title);
               setShowEditModal(false);
               setShowModal(true);
             }}

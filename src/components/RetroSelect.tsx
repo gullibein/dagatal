@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PixelText } from './PixelText';
 
 export function RetroSelect({ 
   value, 
   options, 
   onChange,
-  className = ''
+  className = '',
+  style = {}
 }: { 
   value: string; 
   options: { label: string; value: string }[] | string[]; 
   onChange: (v: string) => void;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,7 +38,7 @@ export function RetroSelect({
   
   return (
     <div className={`retro-select-container ${className}`} ref={containerRef}>
-      <div className="retro-select-value" onClick={() => setIsOpen(!isOpen)}>
+      <div className="retro-select-value" style={style} onClick={() => setIsOpen(!isOpen)}>
         <PixelText text={displayValue} />
       </div>
       {isOpen && (

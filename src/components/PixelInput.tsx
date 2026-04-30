@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PixelText } from './PixelText';
 
 interface PixelInputProps {
@@ -19,11 +19,35 @@ export const PixelInput: React.FC<PixelInputProps> = ({
   block = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleClick = () => {
-    inputRef.current?.focus();
+  const updateSelection = () => {
+    if (inputRef.current) {
+      setSelection({
+        start: inputRef.current.selectionStart || 0,
+        end: inputRef.current.selectionEnd || 0
+      });
+    }
   };
+
+  const handleClick = (e: React.MouseEvent) => {
+    inputRef.current?.focus();
+    updateSelection();
+  };
+
+  // Keep selection state in sync
+  useEffect(() => {
+    if (isFocused) {
+      const interval = setInterval(updateSelection, 50); // Fallback for various input methods
+      return () => clearInterval(interval);
+    }
+  }, [isFocused]);
+
+  const beforeText = value.slice(0, selection.start);
+  const selectedText = value.slice(selection.start, selection.end);
+  const afterText = value.slice(selection.end);
+  const hasSelection = selection.start !== selection.end;
 
   return (
     <div 
@@ -35,9 +59,19 @@ export const PixelInput: React.FC<PixelInputProps> = ({
         ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setIsFocused(true)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setTimeout(updateSelection, 0);
+        }}
+        onFocus={() => {
+          setIsFocused(true);
+          updateSelection();
+        }}
         onBlur={() => setIsFocused(false)}
+        onSelect={updateSelection}
+        onKeyUp={updateSelection}
+        onMouseDown={updateSelection}
+        onMouseMove={(e) => e.buttons === 1 && updateSelection()}
         autoFocus={autoFocus}
         style={{
           position: 'absolute',
@@ -57,26 +91,49 @@ export const PixelInput: React.FC<PixelInputProps> = ({
       
       {/* Visual overlay with PNG font */}
       <div style={{ position: 'relative', pointerEvents: 'none', display: 'flex', alignItems: 'center' }}>
-        {isFocused && value === '' && (
-          <div className="pixel-caret" style={{
-            width: '1px',
-            height: '7px',
-            backgroundColor: 'black',
-            marginRight: '1px'
-          }} />
-        )}
-
         {value === '' ? (
-          <PixelText text={placeholder} color="#aaa" />
-        ) : (
           <>
-            <PixelText text={value} color="black" />
             {isFocused && (
               <div className="pixel-caret" style={{
                 width: '1px',
                 height: '7px',
                 backgroundColor: 'black',
-                marginLeft: '1px'
+                marginRight: '1px'
+              }} />
+            )}
+            <PixelText text={placeholder} color="#aaa" forceUppercase={false} />
+          </>
+        ) : (
+          <>
+            <PixelText text={beforeText} color="black" forceUppercase={false} />
+            
+            {isFocused && !hasSelection && (
+              <div className="pixel-caret" style={{
+                width: '1px',
+                height: '7px',
+                backgroundColor: 'black'
+              }} />
+            )}
+
+            {hasSelection && (
+              isFocused ? (
+                <div className="pixel-selection-bg">
+                  <PixelText text={selectedText} color="white" forceUppercase={false} />
+                </div>
+              ) : (
+                <PixelText text={selectedText} color="black" forceUppercase={false} />
+              )
+            )}
+
+            <PixelText text={afterText} color="black" forceUppercase={false} />
+
+            {isFocused && hasSelection && selection.end === value.length && (
+              /* If selection ends at the very end, we might want a caret there too? 
+                 Actually, standard behavior shows caret at the end of selection. */
+              <div className="pixel-caret" style={{
+                width: '1px',
+                height: '7px',
+                backgroundColor: 'black'
               }} />
             )}
           </>
