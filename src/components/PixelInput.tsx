@@ -8,6 +8,7 @@ interface PixelInputProps {
   autoFocus?: boolean;
   className?: string;
   block?: boolean;
+  onEnter?: () => void;
 }
 
 export const PixelInput: React.FC<PixelInputProps> = ({ 
@@ -16,7 +17,8 @@ export const PixelInput: React.FC<PixelInputProps> = ({
   placeholder = '', 
   autoFocus = false,
   className = '',
-  block = false
+  block = false,
+  onEnter
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
@@ -69,7 +71,12 @@ export const PixelInput: React.FC<PixelInputProps> = ({
         }}
         onBlur={() => setIsFocused(false)}
         onSelect={updateSelection}
-        onKeyUp={updateSelection}
+        onKeyUp={(e) => {
+          updateSelection();
+          if (e.key === 'Enter' && onEnter) {
+            onEnter();
+          }
+        }}
         onMouseDown={updateSelection}
         onMouseMove={(e) => e.buttons === 1 && updateSelection()}
         autoFocus={autoFocus}

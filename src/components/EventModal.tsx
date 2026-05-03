@@ -133,6 +133,7 @@ export function EventModal({ initialDate, initialTitle = '', initialDuration, in
             placeholder="Event Title" 
             value={title}
             onChange={setTitle}
+            onEnter={handleSave}
             autoFocus
             block
           />

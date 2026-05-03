@@ -453,7 +453,7 @@ export function CalendarView({
                 );
               })()}
               <div className="month-events-list">
-                {dayEvents.slice(0, 4).map(e => (
+                {dayEvents.slice(0, 3).map(e => (
                   <div 
                     key={e.id} 
                     className="month-event-item" 

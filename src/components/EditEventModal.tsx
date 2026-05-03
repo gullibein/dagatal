@@ -251,6 +251,7 @@ export function EditEventModal({ initialDate, eventToEdit, initialTitle, initial
             placeholder="Event Title" 
             value={title}
             onChange={setTitle}
+            onEnter={handleSave}
             autoFocus
             block
           />
