@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  format, addMinutes, differenceInMinutes, 
+  addMinutes, differenceInMinutes, 
   getDate, getMonth, getYear, 
   setDate, setMonth, setYear, 
-  setHours, setMinutes, startOfDay,
+  setHours, setMinutes,
   getDaysInMonth
 } from 'date-fns';
 import { PixelText } from './PixelText';
@@ -16,14 +16,15 @@ interface EditEventModalProps {
   eventToEdit?: CalendarEvent;
   initialTitle?: string;
   initialDuration?: number;
+  initialColor?: string;
   onSave: (eventData: Partial<CalendarEvent>) => void;
   onClose: () => void;
-  onShowLess?: (currentTitle: string) => void;
+  onShowLess?: (currentTitle: string, currentColor: string) => void;
 }
 
 const COLORS = ['#ff9292', '#83b8f4', '#afe5ad', '#f2ee97', '#ecb3d2', '#ffd1a9'];
 
-export function EditEventModal({ initialDate, eventToEdit, initialTitle, initialDuration, onSave, onClose, onShowLess }: EditEventModalProps) {
+export function EditEventModal({ initialDate, eventToEdit, initialTitle, initialDuration, initialColor, onSave, onClose, onShowLess }: EditEventModalProps) {
   const [title, setTitle] = useState(initialTitle || eventToEdit?.title || '');
   
   // Draggable State
@@ -58,7 +59,7 @@ export function EditEventModal({ initialDate, eventToEdit, initialTitle, initial
     };
   }));
 
-  const [color, setColor] = useState(eventToEdit?.color || COLORS[0]);
+  const [color, setColor] = useState(eventToEdit?.color || initialColor || COLORS[0]);
   
   const [isDurationMode, setIsDurationMode] = useState(true);
   const [untilDay, setUntilDay] = useState('');
@@ -81,7 +82,7 @@ export function EditEventModal({ initialDate, eventToEdit, initialTitle, initial
     const start = new Date(startD);
     start.setHours(parseInt(hour, 10));
     start.setMinutes(parseInt(minute, 10));
-    const end = addMinutes(start, initialDuration);
+    const end = addMinutes(start, initialDuration || 60);
     setUntilDay(getDate(end).toString());
     setUntilMonth((getMonth(end) + 1).toString());
     setUntilYear(getYear(end).toString());
@@ -347,7 +348,7 @@ export function EditEventModal({ initialDate, eventToEdit, initialTitle, initial
             <label>
               <PixelText text="Repeat" />
             </label>
-            <RetroSelect value={repeatPattern} options={repeatOptions} onChange={setRepeatPattern} className="wide-select" />
+            <RetroSelect value={repeatPattern} options={repeatOptions} onChange={(v) => setRepeatPattern(v as any)} className="wide-select" />
           </div>
 
           <div className="form-row">
@@ -413,7 +414,7 @@ export function EditEventModal({ initialDate, eventToEdit, initialTitle, initial
               <PixelText text="Cancel" />
             </button>
             {onShowLess && (
-              <button onClick={() => onShowLess(title)}>
+              <button onClick={() => onShowLess(title, color)}>
                 <PixelText text="Less" />
               </button>
             )}

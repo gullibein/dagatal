@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface PixelTextProps {
+export interface PixelTextProps {
   text: string;
   color?: string;
   scale?: number;
@@ -8,21 +8,24 @@ interface PixelTextProps {
   noShift?: boolean;
   shiftY?: number;
   forceUppercase?: boolean;
+  block?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
 /**
  * PixelText Component
  * Renders text using the 'NotCake' font.
- * The font is rendered at a small size and upscaled by the game container.
  */
 export const PixelText: React.FC<PixelTextProps> = ({ 
   text, 
   color = 'currentColor', 
   scale = 1, 
   gap = 0, 
-  noShift = false,
+  noShift = false, 
   shiftY = 1,
-  forceUppercase = true 
+  forceUppercase = true,
+  block = false,
+  align = 'left'
 }) => {
   const transform = [
     scale !== 1 ? `scale(${scale})` : '',
@@ -31,7 +34,8 @@ export const PixelText: React.FC<PixelTextProps> = ({
 
   return (
     <span style={{ 
-      display: 'inline-block',
+      display: block ? 'block' : 'inline-block',
+      textAlign: align,
       color: color,
       fontSize: '5px',
       lineHeight: 1.2,
@@ -39,7 +43,7 @@ export const PixelText: React.FC<PixelTextProps> = ({
       letterSpacing: gap ? `${gap}px` : 'normal',
       transform: transform || undefined,
       transformOrigin: 'top left',
-      whiteSpace: 'nowrap',
+      whiteSpace: block ? 'normal' : 'nowrap',
       textTransform: forceUppercase ? 'uppercase' : 'none',
       imageRendering: 'pixelated',
       WebkitFontSmoothing: 'none',

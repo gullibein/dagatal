@@ -149,6 +149,10 @@ p {
   line-height: 1;
 }
 
+.top-bar button span {
+  transform: translateY(1px);
+}
+
 .view-controls button:active, .nav-controls button:active, .add-btn:active {
   background: #999;
 }
@@ -178,10 +182,35 @@ p {
   line-height: 1.5;
 }
 
-.add-btn {
+.add-btn, .settings-btn {
+  background: #fff;
+  border: 1px solid #000;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.add-btn:active, .settings-btn:active {
+  background: #eee;
+}
+
+.top-right-controls {
   position: absolute;
   right: 4px;
   top: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.hamburger-icon {
+  width: 7px;
+  height: 5px;
+  pointer-events: none;
 }
 
 .calendar-content {
@@ -214,13 +243,19 @@ p {
 .month-grid {
   gap: 1px;
   grid-template-columns: 49px 49px 49px 50px 50px 50px 49px;
-  grid-template-rows: 12px repeat(6, 26px);
+  grid-template-rows: 6px repeat(6, 27px);
+  margin-top: 2px;
 }
 
 .day-header {
   text-align: center;
   font-size: 5px;
   border-bottom: 1px solid #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 6px;
+  box-sizing: border-box;
 }
 
 .day-cell {
@@ -263,6 +298,39 @@ p {
   overflow: hidden;
   line-height: 1;
   border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+
+.holiday-label {
+  position: absolute;
+  top: -1px;
+  left: 8px;
+  right: 1px;
+  font-size: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.holiday-tag-small {
+  margin-top: 1px;
+  border-top: 1px solid rgba(255,0,0,0.2);
+  padding-top: 1px;
+}
+
+.holiday-banner {
+  background: rgba(255,0,0,0.1);
+  border: 1px solid rgba(255,0,0,0.3);
+  padding: 2px;
+  margin-bottom: 4px;
+}
+
+.holiday-tooltip {
+  background: #fdfdfd;
+  border: 1px solid #888;
+  padding: 2px 4px;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* Year View */
@@ -752,17 +820,23 @@ button.primary {
   border-bottom: 1px solid #000;
   padding: 1px;
   min-width: 50px;
+  z-index: 2000; /* Ensure it's above everything */
 }
 
-.context-menu-item {
+.menu-item {
   padding: 2px 4px;
   cursor: pointer;
-  font-size: 5px;
+  display: flex;
+  align-items: center;
 }
 
-.context-menu-item:hover {
-  background: #0000aa;
-  color: #fff;
+.menu-item:hover {
+  background: #0000aa; /* Classic retro selection blue */
+}
+
+.menu-item:hover * {
+  /* This ensures PixelText color changes when parent is hovered */
+  filter: invert(1) brightness(2); 
 }
 
 /* Edit Modal Extras */

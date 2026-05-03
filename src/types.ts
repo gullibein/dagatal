@@ -15,3 +15,8 @@ export interface CalendarEvent {
   reminders?: EventReminder[];
   color?: string;
 }
+export interface Holiday {
+  date: Date;
+  name: string;
+  isPublic: boolean;
+}

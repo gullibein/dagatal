@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { PixelText } from './PixelText';
-import { ViewMode, CalendarEvent } from '../types';
+import { ViewMode, CalendarEvent, Holiday } from '../types';
 import { 
   format, addMonths, subMonths, addYears, subYears, 
   addWeeks, subWeeks, addDays, subDays, 
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
-  eachDayOfInterval, isSameMonth, isSameDay, getDaysInMonth,
+  eachDayOfInterval, isSameMonth, isSameDay,
   setHours, setMinutes, startOfDay, endOfDay, addMinutes
 } from 'date-fns';
 
@@ -134,20 +134,42 @@ export function calculateEventLayouts(events: CalendarEvent[], targetDate: Date)
 }
 
 interface CalendarViewProps {
+  currentDate: Date;
+  setCurrentDate: (date: Date) => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   events: CalendarEvent[];
+  holidays?: Holiday[];
   onAddEventClick: (date: Date) => void;
   onRightClick: (date: Date) => void;
   onEventRightClick?: (e: React.MouseEvent, event: CalendarEvent, hoveredDate: Date) => void;
   onSelectionComplete?: (selection: { start: Date, end: Date }, x: number, y: number) => void;
   onUpdateEvent?: (e: CalendarEvent) => void;
+  onSettingsClick: (x: number, y: number) => void;
+  onHolidayHover?: (name: string | null) => void;
   selection?: { start: Date, end: Date } | null;
   mousePos: { x: number; y: number };
   hideHoverLine?: boolean;
 }
 
-export function CalendarView({ events, onAddEventClick, onRightClick, onEventRightClick, onSelectionComplete, onUpdateEvent, selection, mousePos, hideHoverLine }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('month');
+export function CalendarView({ 
+  currentDate, 
+  setCurrentDate,
+  viewMode,
+  setViewMode,
+  events, 
+  holidays = [], 
+  onAddEventClick, 
+  onRightClick, 
+  onEventRightClick, 
+  onSelectionComplete, 
+  onUpdateEvent, 
+  onSettingsClick, 
+  onHolidayHover,
+  selection, 
+  mousePos, 
+  hideHoverLine 
+}: CalendarViewProps) {
   
   // Selection Internal State (for drag performance)
   const [localSelectionStart, setLocalSelectionStart] = useState<Date | null>(null);
@@ -377,7 +399,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
       <div className="grid grid-7 month-grid">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
           <div key={i} className="day-header">
-            <PixelText text={d} />
+            <PixelText text={d} shiftY={-2} />
           </div>
         ))}
         {days.map((day, i) => {
@@ -388,7 +410,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
             if (aAbs !== bAbs) return aAbs - bAbs;
             return (b.durationMinutes || 0) - (a.durationMinutes || 0);
           });
-                  const isToday = isSameDay(day, new Date()) && isCurrentMonth;
+
                   const isSelected = activeSelectionStart && activeSelectionEnd && (
                     (day >= startOfDay(activeSelectionStart) && day <= startOfDay(activeSelectionEnd)) ||
                     (day >= startOfDay(activeSelectionEnd) && day <= startOfDay(activeSelectionStart))
@@ -412,8 +434,24 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                 <PixelText 
                   text={format(day, 'd')} 
                   color={isSameDay(day, new Date()) ? '#ff0000' : (isCurrentMonth ? 'black' : '#888')} 
+                  shiftY={0}
                 />
               </div>
+              {(() => {
+                const h = holidays.find(h => isSameDay(h.date, day));
+                if (!h) return null;
+                const isTwoDigits = format(day, 'd').length > 1;
+                return (
+                  <div 
+                    className="holiday-label"
+                    onMouseEnter={() => onHolidayHover?.(h.name)}
+                    onMouseLeave={() => onHolidayHover?.(null)}
+                    style={{ pointerEvents: 'auto', left: isTwoDigits ? '13px' : '8px' }}
+                  >
+                    <PixelText text={h.name} color="#ff0000" forceUppercase={false} />
+                  </div>
+                );
+              })()}
               <div className="month-events-list">
                 {dayEvents.slice(0, 4).map(e => (
                   <div 
@@ -426,7 +464,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                       if (onEventRightClick) onEventRightClick(ev, e, e.date);
                     }}
                   >
-                    <PixelText text={e.title.substring(0, 7)} color="black" />
+                    <PixelText text={e.title.substring(0, 7)} color="black" forceUppercase={false} />
                   </div>
                 ))}
               </div>
@@ -524,6 +562,15 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                   text={format(day, 'EEE d')} 
                   color={isSameDay(day, new Date()) ? '#ff0000' : 'black'} 
                 />
+                {(() => {
+                  const h = holidays.find(h => isSameDay(h.date, day));
+                  if (!h) return null;
+                  return (
+                    <div className="holiday-tag-small">
+                      <PixelText text={h.name} color="#ff0000" forceUppercase={false} />
+                    </div>
+                  );
+                })()}
               </div>
               <div 
                 className="week-day-body"
@@ -583,7 +630,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                       }}
                       title={`${format(e.date, 'HH:mm')} - ${e.title}`}
                     >
-                      <PixelText text={e.title.substring(0, 6)} color="black" />
+                      <PixelText text={e.title.substring(0, 6)} color="black" forceUppercase={false} />
                     </div>
                   );
                 })}
@@ -622,7 +669,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
             const isBoundary = slotIndex % 2 === 0;
 
             // Grid-aligned label position
-            const getLabelOffset = (t: number) => 0; // No more manual smoothing
+            const getLabelOffset = (_t: number) => 0; // No more manual smoothing
 
             return (
               <div 
@@ -702,7 +749,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
                       <PixelText text={format(e.date, 'HH:mm')} color="#444" />
                     </div>
                     <div className="event-title">
-                      <PixelText text={e.title.substring(0, 20)} color="black" />
+                      <PixelText text={e.title.substring(0, 20)} color="black" forceUppercase={false} />
                     </div>
                 </div>
               );
@@ -913,7 +960,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
       const boxBottom = viewMode === 'day' ? 191 : 194;
       const clampedY = Math.max(boxTop - 3, Math.min(boxBottom + 3, mousePos.y));
       const localZoomScroll = viewMode === 'day' ? zoomScroll : 0;
-      const localZoomHeight = viewMode === 'day' ? zoomHeight : (boxBottom - boxTop) / 48;
+
       
       const mouseInnerY = clampedY - boxTop + localZoomScroll + 3;
 
@@ -967,7 +1014,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
           const dayEvents = events.filter(ev => isEventOnDay(ev, targetDate));
           const weekLayouts = calculateEventLayouts(dayEvents, targetDate);
           clickedEvent = weekLayouts.reverse().find(layout => {
-            const ev = layout.event;
+
             const top = Math.round((layout.startMin / 60) * (157 / 24));
             const bottom = Math.round((layout.endMin / 60) * (157 / 24));
             const actualTop = top;
@@ -1132,7 +1179,7 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
 
               const colLeft = foundColLeft;
               const colWidth = widths[colIndex];
-              const labelWidth = 24;
+
               const yRaw = hoverLineY - 37;
               const y = yRaw;
               
@@ -1184,7 +1231,36 @@ export function CalendarView({ events, onAddEventClick, onRightClick, onEventRig
           <button onClick={handleNext}><PixelText text=">" noShift /></button>
         </div>
         
-        <button className="add-btn" onClick={() => onAddEventClick(currentDate)}><PixelText text="+" color="black" noShift /></button>
+        <div className="top-right-controls">
+          <button className="add-btn" onClick={() => onAddEventClick(currentDate)}>
+            <PixelText text="+" color="black" noShift />
+          </button>
+          
+          <button 
+            className="settings-btn" 
+            onClick={() => {
+              onSettingsClick(356 - 10, 20); // Position it top-right relative to 356x200
+            }}
+          >
+            <canvas 
+              width={7} 
+              height={5} 
+              style={{ width: '7px', height: '5px', imageRendering: 'pixelated', marginLeft: '-1px' }}
+              ref={canvas => {
+                if (canvas) {
+                  const ctx = canvas.getContext('2d');
+                  if (ctx) {
+                    ctx.clearRect(0, 0, 7, 5);
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(0, 0, 7, 1);
+                    ctx.fillRect(0, 2, 7, 1);
+                    ctx.fillRect(0, 4, 7, 1);
+                  }
+                }
+              }}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}

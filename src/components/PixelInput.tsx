@@ -31,7 +31,7 @@ export const PixelInput: React.FC<PixelInputProps> = ({
     }
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     inputRef.current?.focus();
     updateSelection();
   };

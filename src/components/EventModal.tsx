@@ -8,13 +8,14 @@ interface EventModalProps {
   initialTitle?: string;
   onSave: (title: string, date: Date, color: string, duration?: number) => void;
   onClose: () => void;
-  onEdit?: (currentTitle: string) => void;
+  onEdit?: (currentTitle: string, currentColor: string) => void;
   initialDuration?: number;
+  initialColor?: string;
 }
 
 const COLORS = ['#ff9292', '#83b8f4', '#afe5ad', '#f2ee97', '#ecb3d2', '#ffd1a9'];
 
-export function EventModal({ initialDate, initialTitle = '', initialDuration, onSave, onClose, onEdit }: EventModalProps) {
+export function EventModal({ initialDate, initialTitle = '', initialDuration, initialColor, onSave, onClose, onEdit }: EventModalProps) {
   const [title, setTitle] = useState(initialTitle);
   
   // Draggable State
@@ -32,7 +33,7 @@ export function EventModal({ initialDate, initialTitle = '', initialDuration, on
   const [toMinute, setToMinute] = useState(Math.round(initialToDate.getMinutes() / 5 * 5).toString().padStart(2, '0'));
   const [toDate, setToDate] = useState(initialToDate);
   
-  const [color, setColor] = useState(COLORS[0]);
+  const [color, setColor] = useState(initialColor || COLORS[0]);
 
   // When FROM time changes, move TO time by the same duration
   const handleFromChange = (newH: string, newM: string) => {
@@ -216,7 +217,7 @@ export function EventModal({ initialDate, initialTitle = '', initialDuration, on
               <PixelText text="Cancel" />
             </button>
             {onEdit && (
-              <button onClick={() => onEdit(title)}>
+              <button onClick={() => onEdit(title, color)}>
                 <PixelText text="More" />
               </button>
             )}
