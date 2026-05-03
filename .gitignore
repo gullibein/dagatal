@@ -26,3 +26,7 @@ dist-ssr
 # Claude
 .claude/
 .gemini/
+
+# Project Specific Exclusions
+public/dagatal/
+public/pixel-font-editor.html
